@@ -1,121 +1,104 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from keras import models
+from keras import layers
 from sklearn.preprocessing import StandardScaler
-from keras import models, layers, regularizers  # Include regularizers import
-from keras.optimizers import RMSprop  # Import RMSprop
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-
-# Set page configuration
-st.set_page_config(page_title='Heart Disease Prediction', layout='wide')
-
-# Title of the app
-st.title('Heart Disease Prediction App')
-st.markdown("""
-This application predicts the presence of heart disease using various health metrics. 
-You can explore the dataset, visualize correlations, and evaluate the model's performance.
-""")
-
-# Load data
-@st.cache_data
+# Load and prepare the data
+@st.cache
 def load_data():
     data = pd.read_csv('heart.csv')
     return data
 
 data = load_data()
 
-# Display data if checkbox is selected
-if st.checkbox('Show Raw Data'):
-    st.subheader('Raw Dataset')
-    st.write(data)
+# Show the dataset information
+st.title("Heart Disease Prediction App")
+st.write("Dataset Shape:", data.shape)
+st.write(data.describe())
 
-# Correlation matrix display
-if st.checkbox('Show Correlation with Target'):
-    corr_matrix = data.corr()
-    st.subheader('Correlation Matrix')
-    st.write(corr_matrix['target'].sort_values(ascending=False))
-
-    # Display a heatmap of the correlation matrix
-    plt.figure(figsize=(10, 6))
-    st.write(plt.imshow(corr_matrix, cmap='coolwarm', interpolation='nearest'))
-    plt.colorbar()
-    plt.xticks(range(len(corr_matrix.columns)), corr_matrix.columns, rotation=45)
-    plt.yticks(range(len(corr_matrix.columns)), corr_matrix.columns)
-    st.pyplot(plt.gcf())
-
-# Splitting features and target
+# Split data into features and target
 Features = data.iloc[:, :-1]
 Target = data.iloc[:, -1]
 
-# Train-test split
+# Splitting data into training and test sets
 train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
 
-# Scaling features
+# Normalize the features
 scaler = StandardScaler()
 X_train = scaler.fit_transform(train_Features)
 X_test = scaler.transform(test_Features)
 
+# Build the model
 def build_model():
     model = models.Sequential()
     model.add(layers.Input(shape=(train_Features.shape[1],)))
-    model.add(layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(0.01)))  # Increased units
-    model.add(layers.Dropout(0.5))  # Added dropout
-    model.add(layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-    model.add(layers.Dropout(0.5))  # Added dropout
+    model.add(layers.Dense(16, activation='relu'))
+    model.add(layers.Dense(16, activation='relu'))
+    model.add(layers.Dense(16, activation='relu'))
     model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(optimizer=RMSprop(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])  # Adjusted learning rate
+    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 model = build_model()
 
 # Train the model
-if st.button('Train Model'):
-    with st.spinner('Training the model...'):
-        history = model.fit(X_train, train_target, epochs=100, batch_size=10, validation_split=0.2, verbose=0)
-    st.success('Training complete!')
+history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
-    # Plot training and validation accuracy
-    st.subheader('Training and Validation Accuracy')
-    acc_values = history.history['accuracy']
-    val_acc_values = history.history['val_accuracy']
-    epochs = range(1, len(acc_values) + 1)
+# Plotting the training and validation loss
+st.subheader("Training and Validation Loss")
+fig, ax = plt.subplots()
+loss_values = history.history['loss']
+val_loss_values = history.history['val_loss']
+epochs = range(1, len(loss_values) + 1)
+ax.plot(epochs, loss_values, 'bo', label='Training Loss')
+ax.plot(epochs, val_loss_values, 'b', label='Validation Loss')
+ax.set_title('Training and Validation Loss')
+ax.set_xlabel('Epochs')
+ax.set_ylabel('Loss')
+ax.legend()
+st.pyplot(fig)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(epochs, acc_values, 'bo-', label='Training Accuracy')
-    plt.plot(epochs, val_acc_values, 'b-', label='Validation Accuracy')
-    plt.title('Training and Validation Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    plt.grid()
-    st.pyplot(plt.gcf())
+# Plotting the training and validation accuracy
+st.subheader("Training and Validation Accuracy")
+fig, ax = plt.subplots()
+acc_values = history.history['accuracy']
+val_acc_values = history.history['val_accuracy']
+epochs = range(1, len(acc_values) + 1)
+ax.plot(epochs, acc_values, 'bo', label='Training Accuracy')
+ax.plot(epochs, val_acc_values, 'b', label='Validation Accuracy')
+ax.set_title('Training and Validation Accuracy')
+ax.set_xlabel('Epochs')
+ax.set_ylabel('Accuracy')
+ax.legend()
+st.pyplot(fig)
 
-# Predicting heart disease based on test set
-if st.button('Evaluate Model'):
-    
-    # Debugging outputs
-    st.write(f'Training set shape: {X_train.shape}, {train_target.shape}')
-    st.write(f'Test set shape: {X_test.shape}, {test_target.shape}')
+# Evaluate the model on the test set
+loss, accuracy = model.evaluate(X_test, test_target)
+st.subheader("Model Evaluation")
+st.write(f'Test Loss: {loss:.4f}')
+st.write(f'Test Accuracy: {accuracy:.4f}')
 
-    train_loss, train_accuracy = model.evaluate(X_train, train_target)
-    st.write(f'**Training Loss:** {train_loss:.4f}')
-    st.write(f'**Training Accuracy:** {train_accuracy:.4f}')
-    
-    # Evaluate model
-    loss, accuracy = model.evaluate(X_test, test_target, verbose=1)
-    st.write(f'**Test Loss:** {loss:.4f}')
-    st.write(f'**Test Accuracy:** {accuracy:.4f}')
-    
-    # Make predictions on test set
-    predicted_probability = model.predict(X_test)
-    # Show predictions
-    predictions = ['Heart Disease' if prob > 0.5 else 'No Heart Disease' for prob in predicted_probability]
+# Input data for prediction
+st.subheader("Predict Heart Disease")
+input_data = {}
+for column in Features.columns:
+    input_data[column] = st.number_input(f"Enter {column}", min_value=float(Features[column].min()), max_value=float(Features[column].max()), value=float(Features[column].mean()))
 
-    # Compare with actual values
-    comparison_df = pd.DataFrame({
-        'Actual': ['Heart Disease' if x == 1 else 'No Heart Disease' for x in test_target.values],
-        'Predicted': predictions
-    })
-    st.write(comparison_df.head(10))  # Display the first 10 predictions
+# Convert input data to DataFrame
+input_df = pd.DataFrame([input_data])
+
+# Normalize the input data
+input_scaled = scaler.transform(input_df)
+
+# Make predictions
+if st.button("Predict"):
+    predicted_probability = model.predict(input_scaled)
+    prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability[0] > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+    st.write(prediction)

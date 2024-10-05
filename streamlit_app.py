@@ -60,12 +60,12 @@ X_test = scaler.transform(test_Features)
 def build_model():
     model = models.Sequential()
     model.add(layers.Input(shape=(train_Features.shape[1],)))
+    model.add(layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(0.01)))  # Increased units
+    model.add(layers.Dropout(0.5))  # Added dropout
     model.add(layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-    model.add(layers.Dropout(0.5))
+    model.add(layers.Dropout(0.5))  # Added dropout
     model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(optimizer=RMSprop(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=RMSprop(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])  # Adjusted learning rate
     return model
 
 model = build_model()

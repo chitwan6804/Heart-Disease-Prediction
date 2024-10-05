@@ -19,7 +19,7 @@ def load_data():
 # Build the model
 def build_model(input_shape):
     model = models.Sequential()
-    model.add(layers.Input(shape=(input_shape,)))
+    model.add(layers.Input(shape=input_shape))
     model.add(layers.Dense(16, activation='relu'))
     model.add(layers.Dense(16, activation='relu'))
     model.add(layers.Dense(16, activation='relu'))
@@ -32,10 +32,6 @@ st.sidebar.header("Navigation")
 menu_options = ["Home", "Going Through Data", "Training and Prediction"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
-# Initialize model and scaler variable
-model = None
-scaler = None
-
 # Home page
 if selected_option == "Home":
     st.title("🏠 Home")
@@ -47,17 +43,15 @@ elif selected_option == "Going Through Data":
     data = load_data()
     st.write("Dataset Shape:", data.shape)
     st.write(data.describe())
-    
-    # Display a histogram of the dataset
-    st.subheader("Data Distribution")
-    st.bar_chart(data)
 
 # Training and Prediction
 elif selected_option == "Training and Prediction":
-    st.title("💉 Training and Prediction")
+    st.title("💻 Training and Prediction")
     
     # Load data
     data = load_data()
+    
+    # Split data into features and target
     Features = data.iloc[:, :-1]
     Target = data.iloc[:, -1]
 
@@ -65,14 +59,12 @@ elif selected_option == "Training and Prediction":
     train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
 
     # Normalize the features
-    global scaler  # Declare scaler as global to use in prediction
     scaler = StandardScaler()
     X_train = scaler.fit_transform(train_Features)
     X_test = scaler.transform(test_Features)
 
     # Build and train the model
-    global model  # Declare model as global to use in prediction
-    model = build_model(train_Features.shape[1])
+    model = build_model((train_Features.shape[1],))
     history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
     # Plotting the training and validation loss
@@ -109,19 +101,16 @@ elif selected_option == "Training and Prediction":
     st.write(f'Test Accuracy: {accuracy:.4f}')
 
     # Input data for prediction
-    st.write("### Make a Prediction")
+    st.subheader("Predict Heart Disease")
     input_data = {}
     for column in Features.columns:
-        input_data[column] = st.number_input(
-            f"Enter {column}", 
-            min_value=float(Features[column].min()), 
-            max_value=float(Features[column].max()), 
-            value=float(Features[column].mean())
-        )
+        input_data[column] = st.number_input(f"Enter {column}", min_value=float(Features[column].min()), 
+                                              max_value=float(Features[column].max()), 
+                                              value=float(Features[column].mean()))
     
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
-
+    
     # Normalize the input data
     input_scaled = scaler.transform(input_df)
 

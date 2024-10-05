@@ -55,15 +55,15 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(train_Features)
 X_test = scaler.transform(test_Features)
 
-# Define Keras model
 def build_model():
     model = models.Sequential()
     model.add(layers.Input(shape=(train_Features.shape[1],)))
-    model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(16, activation='relu'))
+    model.add(layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=RMSprop(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 model = build_model()

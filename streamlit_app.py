@@ -71,7 +71,7 @@ model = build_model()
 # Train the model
 if st.button('Train Model'):
     with st.spinner('Training the model...'):
-        history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
+        history = model.fit(X_train, train_target, epochs=100, batch_size=10, validation_split=0.2, verbose=0)
     st.success('Training complete!')
 
     # Plot training and validation accuracy
@@ -92,9 +92,14 @@ if st.button('Train Model'):
 
 # Predicting heart disease based on test set
 if st.button('Evaluate Model'):
+    
     # Debugging outputs
     st.write(f'Training set shape: {X_train.shape}, {train_target.shape}')
     st.write(f'Test set shape: {X_test.shape}, {test_target.shape}')
+
+    train_loss, train_accuracy = model.evaluate(X_train, train_target)
+    st.write(f'**Training Loss:** {train_loss:.4f}')
+    st.write(f'**Training Accuracy:** {train_accuracy:.4f}')
     
     # Evaluate model
     loss, accuracy = model.evaluate(X_test, test_target, verbose=1)

@@ -6,8 +6,15 @@ from sklearn.preprocessing import StandardScaler
 from keras import models, layers
 import matplotlib.pyplot as plt
 
+# Set page configuration
+st.set_page_config(page_title='Heart Disease Prediction', layout='wide')
+
 # Title of the app
-st.title('Heart Disease Prediction')
+st.title('Heart Disease Prediction App')
+st.markdown("""
+This application predicts the presence of heart disease using various health metrics. 
+You can explore the dataset, visualize correlations, and evaluate the model's performance.
+""")
 
 # Load data
 @st.cache_data
@@ -18,14 +25,23 @@ def load_data():
 data = load_data()
 
 # Display data if checkbox is selected
-if st.checkbox('Show raw data'):
+if st.checkbox('Show Raw Data'):
     st.subheader('Raw Dataset')
-    st.write(data.head())
+    st.write(data)
 
 # Correlation matrix display
-if st.checkbox('Show correlation with target'):
+if st.checkbox('Show Correlation with Target'):
     corr_matrix = data.corr()
+    st.subheader('Correlation Matrix')
     st.write(corr_matrix['target'].sort_values(ascending=False))
+
+    # Display a heatmap of the correlation matrix
+    plt.figure(figsize=(10, 6))
+    st.write(plt.imshow(corr_matrix, cmap='coolwarm', interpolation='nearest'))
+    plt.colorbar()
+    plt.xticks(range(len(corr_matrix.columns)), corr_matrix.columns, rotation=45)
+    plt.yticks(range(len(corr_matrix.columns)), corr_matrix.columns)
+    st.pyplot(plt.gcf())
 
 # Splitting features and target
 Features = data.iloc[:, :-1]
@@ -54,9 +70,9 @@ model = build_model()
 
 # Train the model
 if st.button('Train Model'):
-    st.write('Training the model...')
-    history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2, verbose=0)
-    st.write('Training complete!')
+    with st.spinner('Training the model...'):
+        history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2, verbose=0)
+    st.success('Training complete!')
 
     # Plot training and validation accuracy
     st.subheader('Training and Validation Accuracy')
@@ -64,24 +80,26 @@ if st.button('Train Model'):
     val_acc_values = history.history['val_accuracy']
     epochs = range(1, len(acc_values) + 1)
 
-    plt.plot(epochs, acc_values, 'bo', label='Training Accuracy')
-    plt.plot(epochs, val_acc_values, 'b', label='Validation Accuracy')
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, acc_values, 'bo-', label='Training Accuracy')
+    plt.plot(epochs, val_acc_values, 'b-', label='Validation Accuracy')
     plt.title('Training and Validation Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.legend()
-
-    st.pyplot(plt.gcf())  # Display plot in Streamlit
+    plt.grid()
+    st.pyplot(plt.gcf())
 
 # Predicting heart disease based on test set
 if st.button('Evaluate Model'):
-    loss, accuracy = model.evaluate(X_test, test_target)
-    st.write(f'Test Loss: {loss:.4f}')
-    st.write(f'Test Accuracy: {accuracy:.4f}')
+    with st.spinner('Evaluating the model...'):
+        loss, accuracy = model.evaluate(X_test, test_target)
+    st.success(f'Test Loss: {loss:.4f}')
+    st.success(f'Test Accuracy: {accuracy:.4f}')
 
     # Make predictions on test set
     predicted_probability = model.predict(X_test)
-    
+
     # Show predictions
     st.subheader("Predictions on Test Data")
     predictions = ['Heart Disease' if prob > 0.5 else 'No Heart Disease' for prob in predicted_probability]
@@ -89,5 +107,10 @@ if st.button('Evaluate Model'):
 
     # Compare with actual values
     comparison_df = pd.DataFrame({'Actual': test_target.values, 'Predicted': predictions})
+    st.subheader('Comparison of Actual vs. Predicted')
     st.write(comparison_df.head())
 
+    # Display confusion matrix
+    confusion_matrix = pd.crosstab(test_target, predictions, rownames=['Actual'], colnames=['Predicted'], margins=True)
+    st.subheader('Confusion Matrix')
+    st.write(confusion_matrix)

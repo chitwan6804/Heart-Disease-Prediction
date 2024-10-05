@@ -107,21 +107,37 @@ elif selected_option == "Training Results":
 # Prediction of Patient
 elif selected_option == "Prediction of Patient":
     st.title("💉 Prediction of Patient")
-    
+    st.write("Please provide the following information to predict heart disease risk for the patient.")
+
     # Load data
     data = load_data()
     Features = data.iloc[:, :-1]
-    
+
     # Input data for prediction
     input_data = {}
+    st.write("### Patient Information")
+    
     for column in Features.columns:
-        input_data[column] = st.number_input(f"Enter {column}", min_value=float(Features[column].min()), 
-                                              max_value=float(Features[column].max()), 
-                                              value=float(Features[column].mean()))
+        if Features[column].dtype in ['int64', 'float64']:
+            input_data[column] = st.slider(
+                f"Enter {column}", 
+                min_value=float(Features[column].min()), 
+                max_value=float(Features[column].max()), 
+                value=float(Features[column].mean()), 
+                step=0.1
+            )
+        else:
+            input_data[column] = st.selectbox(
+                f"Select {column}", 
+                options=sorted(Features[column].unique()), 
+                index=0
+            )
     
-    # Convert input data to DataFrame
+    # Display input values in a table
+    st.write("### Input Values")
     input_df = pd.DataFrame([input_data])
-    
+    st.table(input_df)
+
     # Normalize the input data
     scaler = StandardScaler()
     scaler.fit(data.iloc[:, :-1])  # Fit scaler on the original data
@@ -129,6 +145,22 @@ elif selected_option == "Prediction of Patient":
 
     # Make predictions
     if st.button("Predict"):
-        predicted_probability = model.predict(input_scaled)
-        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability[0] > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-        st.write(prediction)
+        predicted_probability = model.predict(input_scaled)[0][0]
+        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+        
+        # Show prediction results
+        st.write(f"### Prediction Result: {prediction}")
+        
+        # Display the predicted probability
+        st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+        
+        # Visualize the prediction probability
+        st.subheader("Prediction Probability")
+        st.progress(predicted_probability)  # Progress bar for probability
+        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+
+        # Optional: Add some interpretation based on predicted probability
+        if predicted_probability > 0.5:
+            st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
+        else:
+            st.success("The model suggests that the patient is unlikely to have heart disease.")

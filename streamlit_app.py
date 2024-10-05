@@ -32,9 +32,9 @@ st.sidebar.header("Navigation")
 menu_options = ["Home", "Going Through Data", "Training Results", "Prediction of Patient"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
-# Initialize model variable
+# Initialize model and scaler variable
 model = None
-scaler = None  # Initialize scaler
+scaler = None
 
 # Home page
 if selected_option == "Home":
@@ -133,7 +133,7 @@ elif selected_option == "Prediction of Patient":
     input_df = pd.DataFrame([input_data])
 
     # Make predictions only if the model is built
-    if model is not None:
+    if model is not None and scaler is not None:
         # Normalize the input data
         input_scaled = scaler.transform(input_df)
 

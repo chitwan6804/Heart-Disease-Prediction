@@ -17,9 +17,9 @@ def load_data():
     return data
 
 # Build the model
-def build_model():
+def build_model(input_shape):
     model = models.Sequential()
-    model.add(layers.Input(shape=(train_Features.shape[1],)))
+    model.add(layers.Input(shape=(input_shape,)))
     model.add(layers.Dense(16, activation='relu'))
     model.add(layers.Dense(16, activation='relu'))
     model.add(layers.Dense(16, activation='relu'))
@@ -68,7 +68,7 @@ elif selected_option == "Training Results":
     X_test = scaler.transform(test_Features)
 
     # Build and train the model
-    model = build_model()
+    model = build_model(train_Features.shape[1])
     history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
     # Plotting the training and validation loss
@@ -105,9 +105,7 @@ elif selected_option == "Training Results":
     st.write(f'Test Accuracy: {accuracy:.4f}')
 
 # Prediction of Patient
-# Prediction of Patient
 elif selected_option == "Prediction of Patient":
-    
     st.title("💉 Prediction of Patient")
     st.write("Please provide the following information to predict heart disease risk for the patient.")
     
@@ -118,9 +116,12 @@ elif selected_option == "Prediction of Patient":
     # Input data for prediction
     input_data = {}
     for column in Features.columns:
-        input_data[column] = st.number_input(f"Enter {column}", min_value=float(Features[column].min()), 
-                                              max_value=float(Features[column].max()), 
-                                              value=float(Features[column].mean()))
+        input_data[column] = st.number_input(
+            f"Enter {column}", 
+            min_value=float(Features[column].min()), 
+            max_value=float(Features[column].max()), 
+            value=float(Features[column].mean())
+        )
     
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
@@ -132,13 +133,7 @@ elif selected_option == "Prediction of Patient":
 
     # Display input values in a table
     st.write("### Input Values")
-    input_df = pd.DataFrame([input_data])
     st.table(input_df)
-
-    # Normalize the input data
-    scaler = StandardScaler()
-    scaler.fit(data.iloc[:, :-1])  # Fit scaler on the original data
-    input_scaled = scaler.transform(input_df)
 
     # Make predictions
     if st.button("Predict"):

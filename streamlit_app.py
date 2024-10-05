@@ -32,6 +32,10 @@ st.sidebar.header("Navigation")
 menu_options = ["Home", "Going Through Data", "Training Results", "Prediction of Patient"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
+# Initialize model variable
+model = None
+scaler = None  # Initialize scaler
+
 # Home page
 if selected_option == "Home":
     st.title("🏠 Home")
@@ -63,6 +67,7 @@ elif selected_option == "Training Results":
     train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
 
     # Normalize the features
+    global scaler  # Declare scaler as global to use in prediction
     scaler = StandardScaler()
     X_train = scaler.fit_transform(train_Features)
     X_test = scaler.transform(test_Features)
@@ -125,34 +130,36 @@ elif selected_option == "Prediction of Patient":
     
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
-    
-    # Normalize the input data
-    scaler = StandardScaler()
-    scaler.fit(data.iloc[:, :-1])  # Fit scaler on the original data
-    input_scaled = scaler.transform(input_df)
 
-    # Display input values in a table
-    st.write("### Input Values")
-    st.table(input_df)
+    # Make predictions only if the model is built
+    if model is not None:
+        # Normalize the input data
+        input_scaled = scaler.transform(input_df)
 
-    # Make predictions
-    if st.button("Predict"):
-        predicted_probability = model.predict(input_scaled)[0][0]
-        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-        
-        # Show prediction results
-        st.write(f"### Prediction Result: {prediction}")
-        
-        # Display the predicted probability
-        st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-        
-        # Visualize the prediction probability
-        st.subheader("Prediction Probability")
-        st.progress(predicted_probability)  # Progress bar for probability
-        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+        # Display input values in a table
+        st.write("### Input Values")
+        st.table(input_df)
 
-        # Optional: Add some interpretation based on predicted probability
-        if predicted_probability > 0.5:
-            st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
-        else:
-            st.success("The model suggests that the patient is unlikely to have heart disease.")
+        # Make predictions
+        if st.button("Predict"):
+            predicted_probability = model.predict(input_scaled)[0][0]
+            prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+            
+            # Show prediction results
+            st.write(f"### Prediction Result: {prediction}")
+            
+            # Display the predicted probability
+            st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+            
+            # Visualize the prediction probability
+            st.subheader("Prediction Probability")
+            st.progress(predicted_probability)  # Progress bar for probability
+            st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+
+            # Optional: Add some interpretation based on predicted probability
+            if predicted_probability > 0.5:
+                st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
+            else:
+                st.success("The model suggests that the patient is unlikely to have heart disease.")
+    else:
+        st.error("Model is not trained yet. Please go to 'Training Results' to train the model first.")

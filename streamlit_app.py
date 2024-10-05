@@ -128,12 +128,14 @@ elif selected_option == "Training and Prediction":
         
         # Display the predicted probability
         st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-        
+
         # Visualize the prediction probability
         st.subheader("Prediction Probability")
-        st.progress(predicted_probability)  # Progress bar for probability
-        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
-
+        
+        # Ensure predicted_probability is between 0 and 1 for the progress bar
+        progress_value = max(0.0, min(predicted_probability, 1.0))
+        st.progress(progress_value)  # Progress bar for probability
+        
         # Optional: Add some interpretation based on predicted probability
         if predicted_probability > 0.5:
             st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")

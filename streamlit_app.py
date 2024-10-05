@@ -3,8 +3,10 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from keras import models, layers,regularizers
+from keras import models, layers, regularizers  # Include regularizers import
+from keras.optimizers import RMSprop  # Import RMSprop
 import matplotlib.pyplot as plt
+
 
 # Set page configuration
 st.set_page_config(page_title='Heart Disease Prediction', layout='wide')

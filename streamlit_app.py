@@ -29,7 +29,7 @@ def build_model(input_shape):
 
 # Sidebar for navigation
 st.sidebar.header("Navigation")
-menu_options = ["Home", "Going Through Data", "Training Results", "Prediction of Patient"]
+menu_options = ["Home", "Going Through Data", "Training and Prediction"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
 # Initialize model and scaler variable
@@ -52,14 +52,12 @@ elif selected_option == "Going Through Data":
     st.subheader("Data Distribution")
     st.bar_chart(data)
 
-# Training Results
-elif selected_option == "Training Results":
-    st.title("📈 Training Results")
+# Training and Prediction
+elif selected_option == "Training and Prediction":
+    st.title("💉 Training and Prediction")
     
     # Load data
     data = load_data()
-    
-    # Split data into features and target
     Features = data.iloc[:, :-1]
     Target = data.iloc[:, -1]
 
@@ -110,16 +108,8 @@ elif selected_option == "Training Results":
     st.write(f'Test Loss: {loss:.4f}')
     st.write(f'Test Accuracy: {accuracy:.4f}')
 
-# Prediction of Patient
-elif selected_option == "Prediction of Patient":
-    st.title("💉 Prediction of Patient")
-    st.write("Please provide the following information to predict heart disease risk for the patient.")
-    
-    # Load data
-    data = load_data()
-    Features = data.iloc[:, :-1]
-    
     # Input data for prediction
+    st.write("### Make a Prediction")
     input_data = {}
     for column in Features.columns:
         input_data[column] = st.number_input(
@@ -132,35 +122,31 @@ elif selected_option == "Prediction of Patient":
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
 
-    # Make predictions only if the model is built
-    if model is not None and scaler is not None:
-        # Normalize the input data
-        input_scaled = scaler.transform(input_df)
+    # Normalize the input data
+    input_scaled = scaler.transform(input_df)
 
-        # Display input values in a table
-        st.write("### Input Values")
-        st.table(input_df)
+    # Display input values in a table
+    st.write("### Input Values")
+    st.table(input_df)
 
-        # Make predictions
-        if st.button("Predict"):
-            predicted_probability = model.predict(input_scaled)[0][0]
-            prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-            
-            # Show prediction results
-            st.write(f"### Prediction Result: {prediction}")
-            
-            # Display the predicted probability
-            st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-            
-            # Visualize the prediction probability
-            st.subheader("Prediction Probability")
-            st.progress(predicted_probability)  # Progress bar for probability
-            st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+    # Make predictions
+    if st.button("Predict"):
+        predicted_probability = model.predict(input_scaled)[0][0]
+        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+        
+        # Show prediction results
+        st.write(f"### Prediction Result: {prediction}")
+        
+        # Display the predicted probability
+        st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+        
+        # Visualize the prediction probability
+        st.subheader("Prediction Probability")
+        st.progress(predicted_probability)  # Progress bar for probability
+        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
 
-            # Optional: Add some interpretation based on predicted probability
-            if predicted_probability > 0.5:
-                st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
-            else:
-                st.success("The model suggests that the patient is unlikely to have heart disease.")
-    else:
-        st.error("Model is not trained yet. Please go to 'Training Results' to train the model first.")
+        # Optional: Add some interpretation based on predicted probability
+        if predicted_probability > 0.5:
+            st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
+        else:
+            st.success("The model suggests that the patient is unlikely to have heart disease.")

@@ -105,34 +105,31 @@ elif selected_option == "Training Results":
     st.write(f'Test Accuracy: {accuracy:.4f}')
 
 # Prediction of Patient
+# Prediction of Patient
 elif selected_option == "Prediction of Patient":
+    
     st.title("💉 Prediction of Patient")
     st.write("Please provide the following information to predict heart disease risk for the patient.")
-
+    
     # Load data
     data = load_data()
     Features = data.iloc[:, :-1]
-
+    
     # Input data for prediction
     input_data = {}
-    st.write("### Patient Information")
-    
     for column in Features.columns:
-        if Features[column].dtype in ['int64', 'float64']:
-            input_data[column] = st.slider(
-                f"Enter {column}", 
-                min_value=float(Features[column].min()), 
-                max_value=float(Features[column].max()), 
-                value=float(Features[column].mean()), 
-                step=0.1
-            )
-        else:
-            input_data[column] = st.selectbox(
-                f"Select {column}", 
-                options=sorted(Features[column].unique()), 
-                index=0
-            )
+        input_data[column] = st.number_input(f"Enter {column}", min_value=float(Features[column].min()), 
+                                              max_value=float(Features[column].max()), 
+                                              value=float(Features[column].mean()))
     
+    # Convert input data to DataFrame
+    input_df = pd.DataFrame([input_data])
+    
+    # Normalize the input data
+    scaler = StandardScaler()
+    scaler.fit(data.iloc[:, :-1])  # Fit scaler on the original data
+    input_scaled = scaler.transform(input_df)
+
     # Display input values in a table
     st.write("### Input Values")
     input_df = pd.DataFrame([input_data])

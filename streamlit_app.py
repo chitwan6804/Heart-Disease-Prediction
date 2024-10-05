@@ -71,7 +71,7 @@ model = build_model()
 # Train the model
 if st.button('Train Model'):
     with st.spinner('Training the model...'):
-        history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2, verbose=0)
+        history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
     st.success('Training complete!')
 
     # Plot training and validation accuracy
@@ -92,25 +92,23 @@ if st.button('Train Model'):
 
 # Predicting heart disease based on test set
 if st.button('Evaluate Model'):
-    with st.spinner('Evaluating the model...'):
-        loss, accuracy = model.evaluate(X_test, test_target)
-    st.success(f'Test Loss: {loss:.4f}')
-    st.success(f'Test Accuracy: {accuracy:.4f}')
-
+    # Debugging outputs
+    st.write(f'Training set shape: {X_train.shape}, {train_target.shape}')
+    st.write(f'Test set shape: {X_test.shape}, {test_target.shape}')
+    
+    # Evaluate model
+    loss, accuracy = model.evaluate(X_test, test_target, verbose=1)
+    st.write(f'**Test Loss:** {loss:.4f}')
+    st.write(f'**Test Accuracy:** {accuracy:.4f}')
+    
     # Make predictions on test set
     predicted_probability = model.predict(X_test)
-
     # Show predictions
-    st.subheader("Predictions on Test Data")
     predictions = ['Heart Disease' if prob > 0.5 else 'No Heart Disease' for prob in predicted_probability]
-    st.write(predictions)
 
     # Compare with actual values
-    comparison_df = pd.DataFrame({'Actual': test_target.values, 'Predicted': predictions})
-    st.subheader('Comparison of Actual vs. Predicted')
-    st.write(comparison_df.head())
-
-    # Display confusion matrix
-    confusion_matrix = pd.crosstab(test_target, predictions, rownames=['Actual'], colnames=['Predicted'], margins=True)
-    st.subheader('Confusion Matrix')
-    st.write(confusion_matrix)
+    comparison_df = pd.DataFrame({
+        'Actual': ['Heart Disease' if x == 1 else 'No Heart Disease' for x in test_target.values],
+        'Predicted': predictions
+    })
+    st.write(comparison_df.head(10))  # Display the first 10 predictions

@@ -73,6 +73,7 @@ elif selected_option == "Training Results":
     X_test = scaler.transform(test_Features)
 
     # Build and train the model
+    global model  # Declare model as global to use in prediction
     model = build_model(train_Features.shape[1])
     history = model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 

@@ -45,8 +45,8 @@ def preprocess_data(data):
 def train_and_evaluate(X_train, y_train, X_test, y_test):
     model = build_model(X_train.shape[1])
 
-    # Convert y_train to integers (this ensures class_weight works correctly)
-    y_train = y_train.astype(int)
+    # Convert y_train to a NumPy array and ensure it contains integer values
+    y_train = np.array(y_train).astype(int)
 
     # Handle class imbalance
     class_weights = class_weight.compute_class_weight(

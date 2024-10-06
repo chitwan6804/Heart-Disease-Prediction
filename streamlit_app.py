@@ -32,7 +32,6 @@ menu_options = ["Home", "Going Through Data", "Predict for a Patient"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
 # Home page
-# Home page
 if selected_option == "Home":
     st.title("🏠 Heart Disease Prediction App")
     
@@ -184,35 +183,31 @@ elif selected_option == "Predict for a Patient":
     'thalach': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
     'exang': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
     'oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
-    'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),  # Added as it appears in your dataset
-    'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),  # Added as it appears in your dataset
-    'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),  # Added as it appears in your dataset
-}
-
-# Convert input data to DataFrame
-input_df = pd.DataFrame([input_data])
-
-# Normalize the input data
-input_scaled = scaler.transform(input_df)
-
-# Make predictions
-if st.button("Predict"):
-    predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
-    prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+    'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),  
+    'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),
+    'thal': st.number_input("Thalassemia (0-3)", min_value=0, max_value=3, value=0)
+    }
     
-    # Show prediction results
-    st.write(f"### Prediction Result: {prediction}")
+    # Convert input data to DataFrame
+    try:
+        input_df = pd.DataFrame([input_data])
+        input_df = input_df.reindex(columns=train_Features.columns)  # Ensure same feature order
+    except Exception as e:
+        st.write(f"Error creating DataFrame: {e}")
     
-    # Display the predicted probability
-    st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+    # Normalize the input data
+    try:
+        input_scaled = scaler.transform(input_df)
+    except Exception as e:
+        st.write(f"Error in scaling input data: {e}")
     
-    # Visualize the prediction probability
-    st.subheader("Prediction Probability")
-    st.progress(float(predicted_probability))  # Convert to Python float
-    st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
-    
-    # Optional: Add some interpretation based on predicted probability
-    if predicted_probability > 0.5:
-        st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
-    else:
-        st.success("The model suggests that the patient is unlikely to have heart disease.")
+    # Make predictions
+    if st.button("Predict"):
+        try:
+            predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
+            prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+            # Show prediction results
+            st.write(f"### Prediction Result: {prediction}")
+            st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+        except Exception as e:
+            st.error(f"Prediction failed: {e}")

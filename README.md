@@ -1,8 +1,14 @@
-# 🎈 Blank app template
+# 💉 Heart Disease Prediction App
 
-A simple Streamlit app template for you to modify!
+A simple app to quickly check whether a person is showing symptoms of heart disease or is completely healthy.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+[![Open in Streamlit](https://heart-disease-prediction-machine-learning.streamlit.app/)](https://heart-disease-prediction-machine-learning.streamlit.app/)
+
+## Features
+
+- Predict heart disease based on user input.
+- Visualize important health metrics and correlations.
+- User-friendly interface for easy data entry.
 
 ### How to run it on your own machine
 

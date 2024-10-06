@@ -3,4 +3,3 @@ tensorflow
 scikit-learn
 keras
 matplotlib
-seaborn

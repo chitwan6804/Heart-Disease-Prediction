@@ -31,7 +31,25 @@ st.sidebar.header("Navigation")
 menu_options = ["Home", "Going Through Data", "Predict for a Patient"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
-# Home page
+# Load data
+data = load_data()
+
+# Split data into features and target
+Features = data.iloc[:, :-1]
+Target = data.iloc[:, -1]
+
+# Splitting data into training and test sets
+train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
+
+# Normalize the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(train_Features)
+X_test = scaler.transform(test_Features)
+
+# Build and train the model
+model = build_model(train_Features.shape[1])
+model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
+
 # Home page
 if selected_option == "Home":
     st.title("🏠 Heart Disease Prediction App")
@@ -77,9 +95,6 @@ if selected_option == "Home":
 # Going Through Data
 elif selected_option == "Going Through Data":
     st.title("📊 Going Through Data")
-    
-    # Load data
-    data = load_data()
     
     # Display Dataset Shape
     st.write("### Dataset Shape:", data.shape)
@@ -145,74 +160,53 @@ elif selected_option == "Going Through Data":
     # Show the plot in Streamlit
     st.pyplot(fig)
 
-
 # Training and Prediction
 elif selected_option == "Predict for a Patient":
     st.title("🔧 Making Prediction")
     
-    # Load data
-    data = load_data()
-    
-    # Split data into features and target
-    Features = data.iloc[:, :-1]
-    Target = data.iloc[:, -1]
-    
-    # Splitting data into training and test sets
-    train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
-    
-    # Normalize the features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(train_Features)
-    X_test = scaler.transform(test_Features)
-    
-    # Build and train the model
-    model = build_model(train_Features.shape[1])
-    model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
-
-    # Prediction Section
+    # Input data section
     st.subheader("Predict Heart Disease for a New Patient")
     
-    # Ensure that these keys match exactly with those used in your training dataset
     input_data = {
-    'age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
-    'sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
-    'cp': st.number_input("Chest Pain Type (0-3)", min_value=0, max_value=3, value=0),  # Adjusted range based on common conventions
-    'trestbps': st.number_input("Resting Blood Pressure", min_value=0, max_value=200, value=120),
-    'chol': st.number_input("Cholesterol Level", min_value=0, max_value=600, value=200),
-    'fbs': st.selectbox("Fasting Blood Sugar (1 = >120mg/dl, 0 = otherwise)", [0, 1]),
-    'restecg': st.number_input("Resting ECG Result (0-2)", min_value=0, max_value=2, value=1),
-    'thalach': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
-    'exang': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
-    'oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
-    'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),  # Added as it appears in your dataset
-    'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),  # Added as it appears in your dataset
-    'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),  # Added as it appears in your dataset
-}
+        'age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
+        'sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
+        'cp': st.number_input("Chest Pain Type (0-3)", min_value=0, max_value=3, value=0),
+        'trestbps': st.number_input("Resting Blood Pressure", min_value=0, max_value=200, value=120),
+        'chol': st.number_input("Cholesterol Level", min_value=0, max_value=600, value=200),
+        'fbs': st.selectbox("Fasting Blood Sugar (1 = >120mg/dl, 0 = otherwise)", [0, 1]),
+        'restecg': st.number_input("Resting ECG Result (0-2)", min_value=0, max_value=2, value=1),
+        'thalach': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
+        'exang': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
+        'oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
+        'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),
+        'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),
+        'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),
+    }
 
-# Convert input data to DataFrame
-input_df = pd.DataFrame([input_data])
+    # Convert input data to DataFrame
+    input_df = pd.DataFrame([input_data])
 
-# Normalize the input data
-input_scaled = scaler.transform(input_df)
+    # Normalize the input data
+    input_scaled = scaler.transform(input_df)
 
-# Make predictions
-if st.button("Predict"):
-    predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
-    prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-    
-    # Show prediction results
-    st.write(f"### Prediction Result: {prediction}")
-    
-    # Display the predicted probability
-    st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-    
-    # Visualize the prediction probability
-    st.subheader("Prediction Probability")
-    st.progress(float(predicted_probability))  # Convert to Python float
-    st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
-    
-    # Optional: Add some interpretation based on predicted probability
-    if predicted_probability > 0.5:
-        st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
-    else:
-        st.success("The model suggests that the patient is unlikely to have heart disease.")
+    # Make predictions
+    if st.button("Predict"):
+        predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
+        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+
+        # Show prediction results
+        st.write(f"### Prediction Result: {prediction}")
+
+        # Display the predicted probability
+        st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+
+        # Visualize the prediction probability
+        st.subheader("Prediction Probability")
+        st.progress(float(predicted_probability))  # Convert to Python float
+        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+
+        # Optional: Add some interpretation based on predicted probability
+        if predicted_probability > 0.5:
+            st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
+        else:
+            st.success("The model suggests that the patient is unlikely to have heart disease.")

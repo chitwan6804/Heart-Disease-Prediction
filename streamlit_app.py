@@ -1,131 +1,218 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from keras import models, layers
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-from tensorflow.keras import models, layers
-from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
-# Load data
+# Load and prepare the data
+@st.cache_data
 def load_data():
     data = pd.read_csv('heart.csv')
     return data
 
-# Build model
+# Build the model
 def build_model(input_shape):
     model = models.Sequential()
     model.add(layers.Input(shape=(input_shape,)))
     model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dropout(0.3))  # Dropout for regularization
     model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dropout(0.3))  # Another dropout layer
     model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(1, activation='sigmoid'))  # Binary classification
+    model.add(layers.Dense(1, activation='sigmoid'))
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-# Data preprocessing
-def preprocess_data(data):
-    X = data.drop('target', axis=1)
-    y = data['target']
+# Sidebar for navigation
+st.sidebar.header("Navigation")
+menu_options = ["Home", "Going Through Data", "Predict for a Patient"]
+selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
-    # Split the data into train and test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Home page
+# Home page
+if selected_option == "Home":
+    st.title("🏠 Heart Disease Prediction App")
+    
+    # Introduction to the app
+    st.header("Introduction")
+    st.write("""
+    Welcome to the **Heart Disease Prediction App**!
+    
+    This application is designed to help predict the likelihood of heart disease based on several health indicators. It uses machine learning algorithms to analyze patient data and provides a probability estimate of heart disease risk.
+    """)
+    
+    # How it works
+    st.subheader("How it Works:")
+    st.write("""
+    - The app uses a **neural network** model trained on the **Heart Disease dataset**.
+    - Users can input various health-related factors such as age, cholesterol levels, blood pressure, and more to get an assessment of their heart disease risk.
+    - After training the model, you can provide new data to make predictions about heart disease likelihood.
+    """)
+    
+    # Features of the App
+    st.subheader("Features of the App:")
+    st.write("""
+    1. **Data Overview**: Explore the heart disease dataset and visualize important trends and statistics.
+    2. **Model Training**: Train a machine learning model on the dataset and view the model’s performance through metrics like accuracy and loss.
+    3. **Heart Disease Prediction**: Enter your own health information and get a personalized prediction on the risk of heart disease.
+    """)
+    
+    # Who can use the app
+    st.subheader("Who Can Use This App:")
+    st.write("""
+    - **Healthcare professionals**: To analyze patient data and provide a quick assessment.
+    - **Researchers**: To explore machine learning in healthcare.
+    - **General users**: To assess their heart disease risk based on their health data.
+    """)
+    
+    # Disclaimer
+    st.subheader("Disclaimer:")
+    st.write("""
+    This app is intended for educational purposes and should not be used as a substitute for professional medical advice. Always consult with a healthcare provider for accurate diagnosis and treatment.
+    """)
 
-    # Standard scaling
+# Going Through Data
+elif selected_option == "Going Through Data":
+    st.title("📊 Going Through Data")
+    
+    # Load data
+    data = load_data()
+    
+    # Display Dataset Shape
+    st.write("### Dataset Shape:", data.shape)
+    
+    # Display the dataset description
+    st.write(data.describe())
+    
+    # Explain the dataset parameters (features)
+    st.subheader("Understanding the Parameters:")
+    st.write("""
+    The dataset contains several key health indicators which are used to assess heart disease risk. Here's a brief explanation of each parameter:
+
+    - **Age**: The age of the patient.
+    - **Sex**: Gender of the patient (1 = male, 0 = female).
+    - **Chest Pain Type (cp)**: Indicates the type of chest pain experienced (0-3), where:
+        - 0: Typical Angina
+        - 1: Atypical Angina
+        - 2: Non-Anginal Pain
+        - 3: Asymptomatic
+    - **Resting Blood Pressure (trestbps)**: The patient's resting blood pressure (in mm Hg).
+    - **Cholesterol (chol)**: Serum cholesterol level (in mg/dl).
+    - **Fasting Blood Sugar (fbs)**: Whether the patient's fasting blood sugar is above 120 mg/dl (1 = true; 0 = false).
+    - **Resting ECG Results (restecg)**: Results of the resting electrocardiogram (0-2), where:
+        - 0: Normal
+        - 1: ST-T wave abnormality
+        - 2: Left ventricular hypertrophy
+    - **Maximum Heart Rate Achieved (thalach)**: Maximum heart rate achieved during exercise.
+    - **Exercise-Induced Angina (exang)**: Whether the patient experiences angina as a result of exercise (1 = yes; 0 = no).
+    - **ST Depression (oldpeak)**: Depression of the ST segment induced by exercise relative to rest.
+    - **Slope of the Peak Exercise ST Segment (slope)**: Slope of the ST segment during peak exercise (0-2).
+    - **Number of Major Vessels (ca)**: Number of major vessels (0-3) colored by fluoroscopy.
+    - **Thalassemia (thal)**: A blood disorder involving the hemoglobin (0-3), where:
+        - 0: Normal
+        - 1: Fixed Defect
+        - 2: Reversible Defect
+    """)
+    
+    # Correlation Plot using Matplotlib
+    st.subheader("Correlation Matrix")
+
+    # Compute the correlation matrix
+    correlation_matrix = data.corr()
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Plot the correlation matrix using Matplotlib's imshow
+    cax = ax.matshow(correlation_matrix, cmap='coolwarm')
+
+    # Add colorbar
+    fig.colorbar(cax)
+
+    # Set ticks and labels
+    ax.set_xticks(range(len(correlation_matrix.columns)))
+    ax.set_yticks(range(len(correlation_matrix.columns)))
+    ax.set_xticklabels(correlation_matrix.columns, rotation=90)
+    ax.set_yticklabels(correlation_matrix.columns)
+
+    # Display the correlation values on the heatmap
+    for (i, j), val in np.ndenumerate(correlation_matrix.values):
+        ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black')
+
+    # Show the plot in Streamlit
+    st.pyplot(fig)
+
+
+# Training and Prediction
+elif selected_option == "Predict for a Patient":
+    st.title("🔧 Making Prediction")
+    
+    # Load data
+    data = load_data()
+    
+    # Split data into features and target
+    Features = data.iloc[:, :-1]
+    Target = data.iloc[:, -1]
+    
+    # Splitting data into training and test sets
+    train_Features, test_Features, train_target, test_target = train_test_split(Features, Target, test_size=0.2, random_state=42)
+    
+    # Normalize the features
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
-
-    return X_train, X_test, y_train, y_test, scaler
-
-# Train and evaluate model
-def train_and_evaluate(X_train, y_train, X_test, y_test):
-    model = build_model(X_train.shape[1])
-
-    # Convert y_train to NumPy array and ensure it contains integer values
-    y_train = np.array(y_train).astype(int)
-
-    # Handle class imbalance
-    class_weights = class_weight.compute_class_weight(
-        class_weight='balanced',
-        classes=np.unique(y_train),
-        y=y_train
-    )
-    class_weights = dict(enumerate(class_weights))  # Ensure class weights are in the correct format
-
-    # Train model with validation split and class weights
-    history = model.fit(X_train, y_train, epochs=50, batch_size=10, validation_split=0.2, class_weight=class_weights)
-
-    # Ensure y_test is a 1D array for evaluation
-    y_test = np.array(y_test).astype(int)
-    if len(y_test.shape) > 1:
-        y_test = np.squeeze(y_test)
-
-    # Evaluate on test data
-    test_loss, test_acc = model.evaluate(X_test, y_test)
-    st.write(f"Test Loss: {test_loss}, Test Accuracy: {test_acc}")
-
-    return model, history
-
-
-# Plot training and validation loss
-def plot_loss(history):
-    plt.plot(history.history['loss'], label='train_loss')
-    plt.plot(history.history['val_loss'], label='val_loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
-    st.pyplot(plt)
-
-# Predict heart disease
-def predict_heart_disease(model, scaler, user_input):
-    input_data = np.array([user_input])
-    input_data_scaled = scaler.transform(input_data)
-    prediction = model.predict(input_data_scaled)
-    predicted_prob = prediction[0][0]
+    X_train = scaler.fit_transform(train_Features)
+    X_test = scaler.transform(test_Features)
     
-    # Output results
-    if predicted_prob >= 0.5:
-        st.write("Prediction Result: Yes! Patient is predicted to be suffering from heart disease.")
+    # Build and train the model
+    model = build_model(train_Features.shape[1])
+    model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
+
+    # Prediction Section
+    st.subheader("Predict Heart Disease for a New Patient")
+    
+    # Ensure that these keys match exactly with those used in your training dataset
+    input_data = {
+    'age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
+    'sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
+    'cp': st.number_input("Chest Pain Type (0-3)", min_value=0, max_value=3, value=0),  # Adjusted range based on common conventions
+    'trestbps': st.number_input("Resting Blood Pressure", min_value=0, max_value=200, value=120),
+    'chol': st.number_input("Cholesterol Level", min_value=0, max_value=600, value=200),
+    'fbs': st.selectbox("Fasting Blood Sugar (1 = >120mg/dl, 0 = otherwise)", [0, 1]),
+    'restecg': st.number_input("Resting ECG Result (0-2)", min_value=0, max_value=2, value=1),
+    'thalach': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
+    'exang': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
+    'oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
+    'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),  # Added as it appears in your dataset
+    'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),  # Added as it appears in your dataset
+    'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),  # Added as it appears in your dataset
+}
+
+# Convert input data to DataFrame
+input_df = pd.DataFrame([input_data])
+
+# Normalize the input data
+input_scaled = scaler.transform(input_df)
+
+# Make predictions
+if st.button("Predict"):
+    predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
+    prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+    
+    # Show prediction results
+    st.write(f"### Prediction Result: {prediction}")
+    
+    # Display the predicted probability
+    st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+    
+    # Visualize the prediction probability
+    st.subheader("Prediction Probability")
+    st.progress(float(predicted_probability))  # Convert to Python float
+    st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+    
+    # Optional: Add some interpretation based on predicted probability
+    if predicted_probability > 0.5:
+        st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
     else:
-        st.write("Prediction Result: No! Patient is not predicted to be suffering from heart disease.")
-    
-    st.write(f"Predicted Probability of Heart Disease: {predicted_prob:.2f}")
-
-# Streamlit App
-st.title("Heart Disease Prediction")
-
-# Load and preprocess data
-data = load_data()
-X_train, X_test, y_train, y_test, scaler = preprocess_data(data)
-
-# Train the model
-if st.button("Train Model"):
-    model, history = train_and_evaluate(X_train, y_train, X_test, y_test)
-    plot_loss(history)
-
-# Get user input for prediction
-st.write("Enter patient data for prediction:")
-age = st.number_input("Age", min_value=1, max_value=120, value=50)
-sex = st.selectbox("Sex (0 = Female, 1 = Male)", options=[0, 1])
-cp = st.selectbox("Chest Pain Type (0 to 3)", options=[0, 1, 2, 3])
-trestbps = st.number_input("Resting Blood Pressure", min_value=80, max_value=200, value=120)
-chol = st.number_input("Serum Cholestoral (mg/dl)", min_value=100, max_value=600, value=240)
-fbs = st.selectbox("Fasting Blood Sugar > 120 mg/dl (1 = True, 0 = False)", options=[0, 1])
-restecg = st.selectbox("Resting ECG Results (0 to 2)", options=[0, 1, 2])
-thalach = st.number_input("Maximum Heart Rate Achieved", min_value=60, max_value=220, value=150)
-exang = st.selectbox("Exercise Induced Angina (1 = Yes, 0 = No)", options=[0, 1])
-oldpeak = st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=6.0, step=0.1, value=1.0)
-slope = st.selectbox("Slope of the Peak Exercise ST Segment (0 to 2)", options=[0, 1, 2])
-ca = st.selectbox("Number of Major Vessels (0 to 4)", options=[0, 1, 2, 3, 4])
-thal = st.selectbox("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", options=[1, 2, 3])
-
-# Collect input into a list
-user_input = [age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]
-
-# Make prediction
-if st.button("Predict Heart Disease"):
-    predict_heart_disease(model, scaler, user_input)
+        st.success("The model suggests that the patient is unlikely to have heart disease.")

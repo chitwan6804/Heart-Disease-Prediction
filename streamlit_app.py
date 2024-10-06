@@ -8,7 +8,6 @@ from keras import models, layers
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-import seaborn as sns  # <-- Add this line
 
 # Load and prepare the data
 @st.cache_data
@@ -32,6 +31,7 @@ st.sidebar.header("Navigation")
 menu_options = ["Home", "Going Through Data", "Predict for a Patient"]
 selected_option = st.sidebar.selectbox("Choose an option", menu_options)
 
+# Home page
 # Home page
 if selected_option == "Home":
     st.title("🏠 Heart Disease Prediction App")
@@ -74,8 +74,6 @@ if selected_option == "Home":
     This app is intended for educational purposes and should not be used as a substitute for professional medical advice. Always consult with a healthcare provider for accurate diagnosis and treatment.
     """)
 
-
-# Going Through Data
 # Going Through Data
 elif selected_option == "Going Through Data":
     st.title("📊 Going Through Data")
@@ -119,32 +117,38 @@ elif selected_option == "Going Through Data":
         - 2: Reversible Defect
     """)
     
-    # Correlation Matrix
-    st.subheader("Feature Correlations")
-    st.write("""
-    Below is the correlation matrix that shows how each parameter correlates with others. Correlation values range from -1 to 1:
-    - A value of **1** means a perfect positive correlation.
-    - A value of **-1** means a perfect negative correlation.
-    - A value close to **0** indicates no correlation.
-    
-    This helps to understand the relationships between different health indicators and how they might affect heart disease risk.
-    """)
-    
-    # Show correlation matrix
+    # Correlation Plot using Matplotlib
+    st.subheader("Correlation Matrix")
+
+    # Compute the correlation matrix
     correlation_matrix = data.corr()
-    st.write("### Correlation Matrix Heatmap")
-    fig, ax = plt.subplots()
-    ax = sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Plot the correlation matrix using Matplotlib's imshow
+    cax = ax.matshow(correlation_matrix, cmap='coolwarm')
+
+    # Add colorbar
+    fig.colorbar(cax)
+
+    # Set ticks and labels
+    ax.set_xticks(range(len(correlation_matrix.columns)))
+    ax.set_yticks(range(len(correlation_matrix.columns)))
+    ax.set_xticklabels(correlation_matrix.columns, rotation=90)
+    ax.set_yticklabels(correlation_matrix.columns)
+
+    # Display the correlation values on the heatmap
+    for (i, j), val in np.ndenumerate(correlation_matrix.values):
+        ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black')
+
+    # Show the plot in Streamlit
     st.pyplot(fig)
-    
-    # # Optional: Display raw correlation data
-    # st.write("### Raw Correlation Data")
-    # st.write(correlation_matrix)
 
 
 # Training and Prediction
 elif selected_option == "Predict for a Patient":
-    st.title("🔧 Predict for a Patient")
+    st.title("🔧 Making Prediction")
     
     # Load data
     data = load_data()
@@ -165,46 +169,50 @@ elif selected_option == "Predict for a Patient":
     model = build_model(train_Features.shape[1])
     model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
-    st.write("### Model Training Completed")
-
     # Prediction Section
     st.subheader("Predict Heart Disease for a New Patient")
     
-    # Input data for prediction
+    # Ensure that these keys match exactly with those used in your training dataset
     input_data = {
-        'Age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
-        'Sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
-        'ChestPainType': st.number_input("Chest Pain Type (1-4)", min_value=1, max_value=4, value=1),
-        'RestingBP': st.number_input("Resting Blood Pressure", min_value=0, max_value=200, value=120),
-        'Cholesterol': st.number_input("Cholesterol Level", min_value=0, max_value=600, value=200),
-        'FastingBS': st.selectbox("Fasting Blood Sugar (1 = >120mg/dl, 0 = otherwise)", [0, 1]),
-        'RestingECG': st.number_input("Resting ECG Result (0-2)", min_value=0, max_value=2, value=1),
-        'MaxHR': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
-        'ExerciseAngina': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
-        'Oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
-    }
+    'age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
+    'sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
+    'cp': st.number_input("Chest Pain Type (0-3)", min_value=0, max_value=3, value=0),  # Adjusted range based on common conventions
+    'trestbps': st.number_input("Resting Blood Pressure", min_value=0, max_value=200, value=120),
+    'chol': st.number_input("Cholesterol Level", min_value=0, max_value=600, value=200),
+    'fbs': st.selectbox("Fasting Blood Sugar (1 = >120mg/dl, 0 = otherwise)", [0, 1]),
+    'restecg': st.number_input("Resting ECG Result (0-2)", min_value=0, max_value=2, value=1),
+    'thalach': st.number_input("Maximum Heart Rate", min_value=60, max_value=220, value=150),
+    'exang': st.selectbox("Exercise-induced Angina (1 = Yes, 0 = No)", [0, 1]),
+    'oldpeak': st.number_input("ST Depression Induced by Exercise", min_value=0.0, max_value=10.0, value=1.0),
+    'slope': st.number_input("Slope of the Peak Exercise ST Segment (0-2)", min_value=0, max_value=2, value=1),  # Added as it appears in your dataset
+    'ca': st.number_input("Number of Major Vessels (0-3)", min_value=0, max_value=3, value=0),  # Added as it appears in your dataset
+    'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),  # Added as it appears in your dataset
+}
+
+# Convert input data to DataFrame
+input_df = pd.DataFrame([input_data])
+
+# Normalize the input data
+input_scaled = scaler.transform(input_df)
+
+# Make predictions
+if st.button("Predict"):
+    predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
+    prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
     
-    # Convert input data to DataFrame
-    input_df = pd.DataFrame([input_data])
+    # Show prediction results
+    st.write(f"### Prediction Result: {prediction}")
     
-    # Normalize the input data
-    input_scaled = scaler.transform(input_df)
+    # Display the predicted probability
+    st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
     
-    # Make predictions
-    if st.button("Predict"):
-        predicted_probability = model.predict(input_scaled)[0][0]
-        prediction = "Yes, patient is likely to have heart disease." if predicted_probability > 0.5 else "No, patient is unlikely to have heart disease."
-        
-        # Show prediction results
-        st.write(f"### Prediction Result: {prediction}")
-        st.write(f"Predicted Probability: {predicted_probability:.2f}")
-        
-        # Visualize the prediction probability
-        st.subheader("Prediction Probability")
-        st.progress(predicted_probability)
-        
-        # Interpretation
-        if predicted_probability > 0.5:
-            st.warning("This suggests a higher risk of heart disease. Consult a healthcare professional.")
-        else:
-            st.success("The patient is predicted to be at low risk for heart disease.")
+    # Visualize the prediction probability
+    st.subheader("Prediction Probability")
+    st.progress(float(predicted_probability))  # Convert to Python float
+    st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
+    
+    # Optional: Add some interpretation based on predicted probability
+    if predicted_probability > 0.5:
+        st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
+    else:
+        st.success("The model suggests that the patient is unlikely to have heart disease.")

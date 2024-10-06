@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score
 
 # Load data
 def load_data():
-    data = pd.read_csv('heart_disease_data.csv')
+    data = pd.read_csv('heart.csv')
     return data
 
 # Build model

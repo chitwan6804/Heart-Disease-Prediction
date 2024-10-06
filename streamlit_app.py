@@ -45,7 +45,7 @@ def preprocess_data(data):
 def train_and_evaluate(X_train, y_train, X_test, y_test):
     model = build_model(X_train.shape[1])
 
-    # Convert y_train to a NumPy array and ensure it contains integer values
+    # Convert y_train to NumPy array and ensure it contains integer values
     y_train = np.array(y_train).astype(int)
 
     # Handle class imbalance
@@ -58,6 +58,11 @@ def train_and_evaluate(X_train, y_train, X_test, y_test):
 
     # Train model with validation split and class weights
     history = model.fit(X_train, y_train, epochs=50, batch_size=10, validation_split=0.2, class_weight=class_weights)
+
+    # Ensure y_test is a 1D array for evaluation
+    y_test = np.array(y_test).astype(int)
+    if len(y_test.shape) > 1:
+        y_test = np.squeeze(y_test)
 
     # Evaluate on test data
     test_loss, test_acc = model.evaluate(X_test, y_test)

@@ -15,16 +15,20 @@ def load_data():
     data = pd.read_csv('heart.csv')
     return data
 
-# Build the model
 def build_model(input_shape):
-    model = models.Sequential()
-    model.add(layers.Input(shape=(input_shape,)))
-    model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(16, activation='relu'))
-    model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    return model
+    try:
+        model = models.Sequential()
+        model.add(layers.Input(shape=(input_shape,)))
+        model.add(layers.Dense(16, activation='relu'))
+        model.add(layers.Dense(16, activation='relu'))
+        model.add(layers.Dense(16, activation='relu'))
+        model.add(layers.Dense(1, activation='sigmoid'))
+        model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+        return model
+    except Exception as e:
+        st.error(f"Error while building the model: {e}")
+        return None
+
 
 # Sidebar for navigation
 st.sidebar.header("Navigation")

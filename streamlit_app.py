@@ -45,12 +45,16 @@ def preprocess_data(data):
 def train_and_evaluate(X_train, y_train, X_test, y_test):
     model = build_model(X_train.shape[1])
 
+    # Convert y_train to integers (this ensures class_weight works correctly)
+    y_train = y_train.astype(int)
+
     # Handle class imbalance
     class_weights = class_weight.compute_class_weight(
         class_weight='balanced',
         classes=np.unique(y_train),
         y=y_train
     )
+    class_weights = dict(enumerate(class_weights))  # Ensure class weights are in the correct format
 
     # Train model with validation split and class weights
     history = model.fit(X_train, y_train, epochs=50, batch_size=10, validation_split=0.2, class_weight=class_weights)
@@ -60,6 +64,7 @@ def train_and_evaluate(X_train, y_train, X_test, y_test):
     st.write(f"Test Loss: {test_loss}, Test Accuracy: {test_acc}")
 
     return model, history
+
 
 # Plot training and validation loss
 def plot_loss(history):

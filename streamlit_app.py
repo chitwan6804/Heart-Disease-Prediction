@@ -9,6 +9,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+# Set the title and icon for the Streamlit app
+st.set_page_config(
+    page_title="Heart Disease Prediction",
+    page_icon="🚑",  # You can use emojis or a path to your image
+    layout="wide"  # You can also set the layout to 'centered' or 'wide'
+)
+
 # Load and prepare the data
 @st.cache_data
 def load_data():

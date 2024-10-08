@@ -57,9 +57,14 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(train_Features)
 X_test = scaler.transform(test_Features)
 
+# Ensure the target is in the right shape
+train_target = train_target.values.ravel()
+test_target = test_target.values.ravel()
+
 # Build and train the model
 model = build_model(train_Features.shape[1])
-model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
+if model:
+    model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
 # Home page
 if selected_option == "Home":
@@ -89,14 +94,6 @@ if selected_option == "Home":
     3. **Heart Disease Prediction**: Enter your own health information and get a personalized prediction on the risk of heart disease.
     """)
     
-    # Who can use the app
-    st.subheader("Who Can Use This App:")
-    st.write("""
-    - **Healthcare professionals**: To analyze patient data and provide a quick assessment.
-    - **Researchers**: To explore machine learning in healthcare.
-    - **General users**: To assess their heart disease risk based on their health data.
-    """)
-    
     # Disclaimer
     st.subheader("Disclaimer:")
     st.write("""
@@ -120,62 +117,36 @@ elif selected_option == "Going Through Data":
 
     - **Age**: The age of the patient.
     - **Sex**: Gender of the patient (1 = male, 0 = female).
-    - **Chest Pain Type (cp)**: Indicates the type of chest pain experienced (0-3), where:
-        - 0: Typical Angina
-        - 1: Atypical Angina
-        - 2: Non-Anginal Pain
-        - 3: Asymptomatic
+    - **Chest Pain Type (cp)**: Indicates the type of chest pain experienced (0-3).
     - **Resting Blood Pressure (trestbps)**: The patient's resting blood pressure (in mm Hg).
     - **Cholesterol (chol)**: Serum cholesterol level (in mg/dl).
     - **Fasting Blood Sugar (fbs)**: Whether the patient's fasting blood sugar is above 120 mg/dl (1 = true; 0 = false).
-    - **Resting ECG Results (restecg)**: Results of the resting electrocardiogram (0-2), where:
-        - 0: Normal
-        - 1: ST-T wave abnormality
-        - 2: Left ventricular hypertrophy
+    - **Resting ECG Results (restecg)**: Results of the resting electrocardiogram (0-2).
     - **Maximum Heart Rate Achieved (thalach)**: Maximum heart rate achieved during exercise.
     - **Exercise-Induced Angina (exang)**: Whether the patient experiences angina as a result of exercise (1 = yes; 0 = no).
     - **ST Depression (oldpeak)**: Depression of the ST segment induced by exercise relative to rest.
     - **Slope of the Peak Exercise ST Segment (slope)**: Slope of the ST segment during peak exercise (0-2).
     - **Number of Major Vessels (ca)**: Number of major vessels (0-3) colored by fluoroscopy.
-    - **Thalassemia (thal)**: A blood disorder involving the hemoglobin (0-3), where:
-        - 0: Normal
-        - 1: Fixed Defect
-        - 2: Reversible Defect
+    - **Thalassemia (thal)**: A blood disorder involving the hemoglobin (0-3).
     """)
     
     # Correlation Plot using Matplotlib
     st.subheader("Correlation Matrix")
-
-    # Compute the correlation matrix
     correlation_matrix = data.corr()
-
-    # Create a figure and axis
     fig, ax = plt.subplots(figsize=(10, 8))
-
-    # Plot the correlation matrix using Matplotlib's imshow
     cax = ax.matshow(correlation_matrix, cmap='coolwarm')
-
-    # Add colorbar
     fig.colorbar(cax)
-
-    # Set ticks and labels
     ax.set_xticks(range(len(correlation_matrix.columns)))
     ax.set_yticks(range(len(correlation_matrix.columns)))
     ax.set_xticklabels(correlation_matrix.columns, rotation=90)
     ax.set_yticklabels(correlation_matrix.columns)
-
-    # Display the correlation values on the heatmap
     for (i, j), val in np.ndenumerate(correlation_matrix.values):
         ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black')
-
-    # Show the plot in Streamlit
     st.pyplot(fig)
 
-# Training and Prediction
+# Prediction for a Patient
 elif selected_option == "Predict for a Patient":
     st.title("🔧 Making Prediction")
-    
-    # Input data section
     st.subheader("Predict Heart Disease for a New Patient")
     
     input_data = {
@@ -194,30 +165,14 @@ elif selected_option == "Predict for a Patient":
         'thal': st.number_input("Thalassemia (1 = Normal, 2 = Fixed Defect, 3 = Reversible Defect)", min_value=1, max_value=3, value=1),
     }
 
-    # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
-
-    # Normalize the input data
     input_scaled = scaler.transform(input_df)
 
-    # Make predictions
     if st.button("Predict"):
-        predicted_probability = model.predict(input_scaled)[0][0]  # Get the predicted probability
+        predicted_probability = model.predict(input_scaled)[0][0]
         prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-
-        # Show prediction results
         st.write(f"### Prediction Result: {prediction}")
-
-        # Display the predicted probability
         st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-
-        # Visualize the prediction probability
         st.subheader("Prediction Probability")
-        st.progress(float(predicted_probability))  # Convert to Python float
-        st.write("The probability indicates the likelihood of heart disease. A value above 0.5 suggests a higher risk.")
-
-        # Optional: Add some interpretation based on predicted probability
-        if predicted_probability > 0.5:
-            st.warning("The model suggests that the patient may have heart disease. Consider consulting a healthcare professional.")
-        else:
-            st.success("The model suggests that the patient is unlikely to have heart disease.")
+        st.progress(float(predicted_probability))
+        st.write(predicted_probability)

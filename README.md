@@ -2,7 +2,7 @@
 
 A simple app to quickly check whether a person is showing symptoms of heart disease or is completely healthy.
 
-[![Open in Streamlit](https://heart-disease-prediction-machine-learning.streamlit.app/)](https://heart-disease-prediction-machine-learning.streamlit.app/)
+[[Open in Streamlit](https://heart-disease-prediction-machine-learning.streamlit.app/)](https://heart-disease-prediction-machine-learning.streamlit.app/)
 
 ## Features
 

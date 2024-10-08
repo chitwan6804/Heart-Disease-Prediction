@@ -64,10 +64,7 @@ test_target = test_target.values.ravel()
 # Build and train the model
 model = build_model(train_Features.shape[1])
 if model:
-    try:
-        model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
-    except Exception as e:
-        st.error(f"Error while training the model: {e}")
+    model.fit(X_train, train_target, epochs=50, batch_size=10, validation_split=0.2)
 
 # Home page
 if selected_option == "Home":
@@ -75,7 +72,7 @@ if selected_option == "Home":
     
     # Introduction to the app
     st.header("Introduction")
-    st.write(""" 
+    st.write("""
     Welcome to the **Heart Disease Prediction App**!
     
     This application is designed to help predict the likelihood of heart disease based on several health indicators. It uses machine learning algorithms to analyze patient data and provides a probability estimate of heart disease risk.
@@ -83,7 +80,7 @@ if selected_option == "Home":
     
     # How it works
     st.subheader("How it Works:")
-    st.write(""" 
+    st.write("""
     - The app uses a **neural network** model trained on the **Heart Disease dataset**.
     - Users can input various health-related factors such as age, cholesterol levels, blood pressure, and more to get an assessment of their heart disease risk.
     - After training the model, you can provide new data to make predictions about heart disease likelihood.
@@ -91,7 +88,7 @@ if selected_option == "Home":
     
     # Features of the App
     st.subheader("Features of the App:")
-    st.write(""" 
+    st.write("""
     1. **Data Overview**: Explore the heart disease dataset and visualize important trends and statistics.
     2. **Model Training**: Train a machine learning model on the dataset and view the model’s performance through metrics like accuracy and loss.
     3. **Heart Disease Prediction**: Enter your own health information and get a personalized prediction on the risk of heart disease.
@@ -99,7 +96,7 @@ if selected_option == "Home":
     
     # Disclaimer
     st.subheader("Disclaimer:")
-    st.write(""" 
+    st.write("""
     This app is intended for educational purposes and should not be used as a substitute for professional medical advice. Always consult with a healthcare provider for accurate diagnosis and treatment.
     """)
 
@@ -115,8 +112,9 @@ elif selected_option == "Going Through Data":
     
     # Explain the dataset parameters (features)
     st.subheader("Understanding the Parameters:")
-    st.write(""" 
+    st.write("""
     The dataset contains several key health indicators which are used to assess heart disease risk. Here's a brief explanation of each parameter:
+
     - **Age**: The age of the patient.
     - **Sex**: Gender of the patient (1 = male, 0 = female).
     - **Chest Pain Type (cp)**: Indicates the type of chest pain experienced (0-3).
@@ -151,7 +149,6 @@ elif selected_option == "Predict for a Patient":
     st.title("🔧 Making Prediction")
     st.subheader("Predict Heart Disease for a New Patient")
     
-    # Collect input data
     input_data = {
         'age': st.number_input("Enter Age", min_value=0, max_value=100, value=50),
         'sex': st.selectbox("Sex (0 = Female, 1 = Male)", [0, 1]),
@@ -172,16 +169,10 @@ elif selected_option == "Predict for a Patient":
     input_scaled = scaler.transform(input_df)
 
     if st.button("Predict"):
-        try:
-            predicted_probability = model.predict(input_scaled)[0][0]
-            prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
-            st.write(f"### Prediction Result: {prediction}")
-            st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
-            st.subheader("Prediction Probability")
-            st.progress(float(predicted_probability))
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
-
-# Run the app
-if __name__ == "__main__":
-    st.run()
+        predicted_probability = model.predict(input_scaled)[0][0]
+        prediction = "Yes! Patient is predicted to be suffering from heart disease." if predicted_probability > 0.5 else "No! Patient is predicted not to be suffering from heart disease."
+        st.write(f"### Prediction Result: {prediction}")
+        st.write(f"Predicted Probability of Heart Disease: {predicted_probability:.2f}")
+        st.subheader("Prediction Probability")
+        st.progress(float(predicted_probability))
+        st.write(predicted_probability)
